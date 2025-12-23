@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamFinder - Search & Stream</title>
+    <meta name="description"
+        content="Search movies and TV shows, then stream them instantly via Stremio or web players.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-card: #1a1a1a;
+            --accent: #e50914;
+            --accent-hover: #ff2832;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --border: #2a2a2a;
+            --success: #46d369;
+            --warning: #f5c518;
+            --radius: 12px;
+            --radius-sm: 8px;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.9) 0%, transparent 100%);
+            padding: 20px 40px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .account-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            /* gap: 8px; */
+            transition: var(--transition);
+        }
+
+        .account-btn>*:not(:last-child) {
+            margin-right: 8px;
+        }
+
+        .account-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent), #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo span {
+            font-weight: 300;
+            opacity: 0.7;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 50vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 120px 20px 60px;
+            text-align: center;
+            background: radial-gradient(ellipse at top, rgba(229, 9, 20, 0.15) 0%, transparent 60%);
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            /* Fallback */
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 700;
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 500px;
+            margin-bottom: 40px;
+        }
+
+        /* Search Box */
+        .search-container {
+            width: 100%;
+            max-width: 600px;
+            position: relative;
+        }
+
+        .search-wrapper {
+            display: flex;
+            /* gap: 12px; */
+            background: var(--bg-secondary);
+            padding: 8px;
+            border-radius: 50px;
+            border: 1px solid var(--border);
+            transition: var(--transition);
+        }
+
+        .search-wrapper>*:not(:last-child) {
+            margin-right: 12px;
+        }
+
+        .search-wrapper:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(229, 9, 20, 0.2);
+        }
+
+        .type-select {
+            background: var(--bg-card);
+            border: none;
+            color: var(--text-primary);
+            padding: 12px 20px;
+            border-radius: 40px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .search-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1rem;
+            padding: 12px 16px;
+            outline: none;
+        }
+
+        .search-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .search-btn {
+            background: var(--accent);
+            border: none;
+            color: white;
+            padding: 12px 28px;
+            border-radius: 40px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .search-btn:hover {
+            background: var(--accent-hover);
+            transform: scale(1.02);
+        }
+
+        .search-btn:disabled {
+            background: #444;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Results Grid */
+        .results-section {
+            padding: 0 40px 80px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .results-header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .results-count {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 24px;
+        }
+
+        /* Movie Card */
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            overflow: hidden;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: var(--shadow);
+        }
+
+        .card:hover .card-overlay {
+            opacity: 1;
+        }
+
+        .poster {
+            width: 100%;
+            /* aspect-ratio: 2/3; */
+            height: 270px;
+            object-fit: cover;
+            background: var(--bg-secondary);
+        }
+
+        .poster.no-image {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .card-info {
+            padding: 12px;
+        }
+
+        .card-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
+        }
+
+        .card-meta {
+            display: flex;
+            align-items: center;
+            /* gap: 8px; */
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .card-meta>*:not(:last-child) {
+            margin-right: 8px;
+        }
+
+        .card-rating {
+            display: flex;
+            align-items: center;
+            /* gap: 4px; */
+            color: var(--warning);
+        }
+
+        .card-rating>*:not(:last-child) {
+            margin-right: 4px;
+        }
+
+        .card-overlay {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.5) 50%, transparent 100%);
+            opacity: 0;
+            transition: var(--transition);
+            display: flex;
+            align-items: flex-end;
+            padding: 16px;
+        }
+
+        .overlay-btn {
+            width: 100%;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Modal */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal-backdrop.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            max-width: 700px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            /* gap: 24px; */
+            padding: 24px;
+            background: var(--bg-card);
+        }
+
+        .modal-header>*:not(:last-child) {
+            margin-right: 24px;
+        }
+
+        .modal-poster {
+            width: 150px;
+            border-radius: var(--radius-sm);
+            flex-shrink: 0;
+        }
+
+        .modal-info h2 {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+
+        .modal-meta {
+            display: flex;
+            flex-wrap: wrap;
+            /* gap: 12px; */
+            margin-bottom: 12px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .modal-meta>*:not(:last-child) {
+            margin-right: 12px;
+        }
+
+        .modal-meta span {
+            display: flex;
+            align-items: center;
+            /* gap: 4px; */
+        }
+
+        .modal-meta span>*:not(:last-child) {
+            margin-right: 4px;
+        }
+
+        .modal-overview {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Episode Selector */
+        .episode-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        /* Stream Buttons */
+        .stream-section h3 {
+            font-size: 1.1rem;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            /* gap: 8px; */
+        }
+
+        .stream-section h3>*:not(:last-child) {
+            margin-right: 8px;
+        }
+
+        .stream-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .stream-btn {
+            display: flex;
+            align-items: center;
+            /* gap: 12px; */
+            padding: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .stream-btn>*:not(:last-child) {
+            margin-right: 12px;
+        }
+
+        .stream-btn:hover {
+            background: var(--bg-primary);
+            border-color: var(--accent);
+            transform: translateX(4px);
+        }
+
+        .stream-btn.stremio {
+            border-color: #8a5cf5;
+            background: linear-gradient(135deg, rgba(138, 92, 245, 0.2), transparent);
+        }
+
+        .stream-btn.stremio:hover {
+            border-color: #a77fff;
+        }
+
+        .stream-icon {
+            font-size: 1.5rem;
+            width: 32px;
+            text-align: center;
+        }
+
+        .stream-info {
+            flex: 1;
+        }
+
+        .stream-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .stream-desc {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            justify-content: center;
+            padding: 60px;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state .icon {
+            font-size: 4rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header {
+                padding: 16px 20px;
+            }
+
+            .hero {
+                padding: 100px 16px 40px;
+            }
+
+            .results-section {
+                padding: 0 16px 60px;
+            }
+
+            .search-wrapper {
+                flex-wrap: wrap;
+                border-radius: var(--radius);
+            }
+
+            .type-select,
+            .search-btn {
+                width: 100%;
+                border-radius: var(--radius-sm);
+            }
+
+            .modal-header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .modal-header>*:not(:last-child) {
+                margin-right: 0;
+                margin-bottom: 24px;
+            }
+
+            .episode-selector {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="logo">Stream<span>Finder</span></div>
+        <button class="account-btn" onclick="openAccountModal()">
+            <span class="icon">🔑</span>
+            <span class="text">Stremio Account</span>
+        </button>
+    </header>
+
+    <section class="hero">
+        <h1>Find & Stream Anything</h1>
+        <p>Search millions of movies and TV shows, then open them directly in Stremio or your favorite player.</p>
+
+        <div class="search-container">
+            <div class="search-wrapper">
+                <select id="typeSelect" class="type-select">
+                    <option value="movie">🎬 Movie</option>
+                    <option value="tv">📺 TV Show</option>
+                </select>
+                <input type="text" id="searchInput" class="search-input" placeholder="Search for a title..."
+                    autocomplete="off">
+                <button id="searchBtn" class="search-btn">Search</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="results-section">
+        <div id="resultsHeader" class="results-header" style="display: none;">
+            <h2>Search Results</h2>
+            <span id="resultsCount" class="results-count"></span>
+        </div>
+        <div id="resultsGrid" class="results-grid"></div>
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <div class="icon">🔍</div>
+            <p>No results found. Try a different search term.</p>
+        </div>
+    </section>
+
+    <!-- Account Modal -->
+    <div id="accountModal" class="modal-backdrop">
+        <div class="modal" style="max-width: 500px;">
+            <button class="close-btn" onclick="closeAccountModal()">✕</button>
+            <div class="modal-header" style="flex-direction: column; align-items: center; text-align: center;">
+                <style>
+                    #accountModal .modal-header>* {
+                        margin-bottom: 12px;
+                    }
+
+                    #accountModal .modal-header>*:last-child {
+                        margin-bottom: 0;
+                    }
+                </style>
+                <h2>🟣 Stremio Login</h2>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                    Enter your credentials to enable authenticated links and token recovery.
+                </p>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="stremioEmail" placeholder="your@email.com">
+                </div>
+                <div class="form-group" style="margin-top: 16px;">
+                    <label>Password</label>
+                    <input type="password" id="stremioPassword" placeholder="••••••••">
+                </div>
+
+                <button id="recoverTokenBtn" class="search-btn" style="width: 100%; margin-top: 24px;"
+                    onclick="recoverToken()">
+                    Recover Token
+                </button>
+
+                <div id="tokenResult"
+                    style="margin-top: 24px; display: none; background: #222; padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 8px;">AUTH KEY</div>
+                    <code id="tokenDisplay"
+                        style="color: var(--success); word-break: break-all; font-family: monospace;"></code>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Movie/TV Modal -->
+    <div id="modal" class="modal-backdrop">
+        <div class="modal">
+            <button class="close-btn" onclick="closeModal()">✕</button>
+            <div class="modal-header">
+                <img id="modalPoster" class="modal-poster" src="" alt="">
+                <div class="modal-info">
+                    <h2 id="modalTitle"></h2>
+                    <div class="modal-meta">
+                        <span id="modalYear">📅 2024</span>
+                        <span id="modalRating">⭐ 8.5</span>
+                    </div>
+                    <p id="modalOverview" class="modal-overview"></p>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div id="episodeSelector" class="episode-selector" style="display: none;">
+                    <div class="form-group">
+                        <label>Season</label>
+                        <input type="number" id="seasonInput" min="1" value="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Episode</label>
+                        <input type="number" id="episodeInput" min="1" value="1">
+                    </div>
+                </div>
+
+                <div class="stream-section">
+                    <h3>🎬 Open In Stremio</h3>
+                    <div class="stream-grid" id="stremioLinks"></div>
+                </div>
+
+                <div class="stream-section" style="margin-top: 24px;">
+                    <h3>🌐 Web Players</h3>
+                    <div class="stream-grid" id="webLinks"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let currentItem = null;
+        let imdbId = null;
+
+        const IMG_BASE = 'https://image.tmdb.org/t/p/w342';
+        const IMG_LARGE = 'https://image.tmdb.org/t/p/w500';
+
+        // DOM Elements
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const typeSelect = document.getElementById('typeSelect');
+        const resultsGrid = document.getElementById('resultsGrid');
+        const resultsHeader = document.getElementById('resultsHeader');
+        const resultsCount = document.getElementById('resultsCount');
+        const emptyState = document.getElementById('emptyState');
+        const modal = document.getElementById('modal');
+
+        // Search functionality
+        async function search() {
+            const query = searchInput.value.trim();
+            const type = typeSelect.value;
+
+            if (!query) return;
+
+            searchBtn.disabled = true;
+            searchBtn.textContent = 'Searching...';
+            resultsGrid.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+            resultsHeader.style.display = 'none';
+            emptyState.style.display = 'none';
+
+            try {
+                const res = await fetch(`/api/search/${type}?query=${encodeURIComponent(query)}`);
+                const data = await res.json();
+
+                resultsGrid.innerHTML = '';
+
+                if (!data.results || data.results.length === 0) {
+                    emptyState.style.display = 'block';
+                    return;
+                }
+
+                resultsHeader.style.display = 'flex';
+                resultsCount.textContent = `${data.results.length} results`;
+
+                const sorted = data.results.sort((a, b) => b.popularity - a.popularity);
+
+                sorted.forEach(item => {
+                    const card = createCard(item, type);
+                    resultsGrid.appendChild(card);
+                });
+
+            } catch (error) {
+                resultsGrid.innerHTML = '<p style="color: #ff6b6b; text-align: center;">Error searching. Try again.</p>';
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.textContent = 'Search';
+            }
+        }
+
+        function createCard(item, type) {
+            const card = document.createElement('div');
+            card.className = 'card';
+
+            const title = item.title || item.name;
+            const date = item.release_date || item.first_air_date || '';
+            const year = date.split('-')[0] || 'N/A';
+            const rating = (item.vote_average ? item.vote_average.toFixed(1) : 'N/A');
+
+            card.innerHTML = `
+        ${item.poster_path
+                    ? `<img class="poster" src="${IMG_BASE}${item.poster_path}" alt="${title}" loading="lazy">`
+                    : `<div class="poster no-image">🎬</div>`
+                }
+        <div class="card-info">
+          <div class="card-title" title="${title}">${title}</div>
+          <div class="card-meta">
+            <span>${year}</span>
+            <span class="card-rating">⭐ ${rating}</span>
+          </div>
+        </div>
+        <div class="card-overlay">
+          <button class="overlay-btn">View Details</button>
+        </div>
+      `;
+
+            card.onclick = () => openModal(item, type);
+            return card;
+        }
+
+        async function openModal(item, type) {
+            currentItem = { ...item, type };
+            imdbId = null;
+
+            const title = item.title || item.name;
+            const date = item.release_date || item.first_air_date || '';
+            const year = date.split('-')[0] || 'N/A';
+            const rating = (item.vote_average ? item.vote_average.toFixed(1) : 'N/A');
+
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalYear').textContent = `📅 ${year}`;
+            document.getElementById('modalRating').textContent = `⭐ ${rating}`;
+            document.getElementById('modalOverview').textContent = item.overview || 'No description available.';
+            document.getElementById('modalPoster').src = item.poster_path
+                ? `${IMG_LARGE}${item.poster_path}`
+                : '';
+
+            // Show/hide episode selector
+            const episodeSelector = document.getElementById('episodeSelector');
+            episodeSelector.style.display = type === 'tv' ? 'grid' : 'none';
+
+            // Fetch IMDB ID for Stremio links
+            try {
+                const res = await fetch(`/api/external-ids/${type}/${item.id}`);
+                const data = await res.json();
+                imdbId = data.imdb_id;
+            } catch (e) {
+                console.log('Could not fetch IMDB ID');
+            }
+
+            updateLinks();
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        async function updateLinks() {
+            if (!currentItem) return;
+
+            const { id, type } = currentItem;
+            const season = document.getElementById('seasonInput').value || 1;
+            const episode = document.getElementById('episodeInput').value || 1;
+
+            const stremioContainer = document.getElementById('stremioLinks');
+            const webContainer = document.getElementById('webLinks');
+
+            // Stremio links (requires IMDB ID)
+            if (imdbId) {
+                const stremioUrl = type === 'movie'
+                    ? `stremio://detail/movie/${imdbId}`
+                    : `stremio://detail/series/${imdbId}/${season}/${episode}`;
+
+                // Build authenticated redirect URL
+                const stremioType = type === 'movie' ? 'movie' : 'series';
+                const authRedirectUrl = type === 'movie'
+                    ? `/stremio-redirect?type=${stremioType}&id=${imdbId}`
+                    : `/stremio-redirect?type=${stremioType}&id=${imdbId}&season=${season}&episode=${episode}`;
+
+                stremioContainer.innerHTML = `
+          <a href="${stremioUrl}" class="stream-btn stremio">
+            <span class="stream-icon">🟣</span>
+            <div class="stream-info">
+              <div class="stream-name">Open in Stremio App</div>
+              <div class="stream-desc">Launch desktop app</div>
+            </div>
+          </a>
+          <a href="${authRedirectUrl}" target="_blank" class="stream-btn stremio">
+            <span class="stream-icon">🔑</span>
+            <div class="stream-info">
+              <div class="stream-name">Stremio Web (Logged In)</div>
+              <div class="stream-desc">Uses your saved token</div>
+            </div>
+          </a>
+          <a href="https://web.stremio.com/#/detail/${stremioType}/${imdbId}" target="_blank" class="stream-btn stremio">
+            <span class="stream-icon">🌐</span>
+            <div class="stream-info">
+              <div class="stream-name">Stremio Web (Guest)</div>
+              <div class="stream-desc">Open without login</div>
+            </div>
+          </a>
+        `;
+            } else {
+                stremioContainer.innerHTML = '<p style="color: var(--text-secondary); font-size: 0.9rem;">IMDB ID not available for Stremio links.</p>';
+            }
+
+            // Render static web links first with placeholder for Direct Stream
+            const webSources = [
+                {
+                    name: 'VixSrc',
+                    desc: 'High Quality',
+                    url: type === 'movie'
+                        ? `https://vixsrc.to/movie/${id}`
+                        : `https://vixsrc.to/tv/${id}/${season}/${episode}`
+                },
+                {
+                    name: 'VidSrc.to',
+                    desc: 'Fast Loading',
+                    url: type === 'movie'
+                        ? `https://vidsrc.to/embed/movie/${id}`
+                        : `https://vidsrc.to/embed/tv/${id}/${season}/${episode}`
+                },
+                {
+                    name: 'VidSrc.me',
+                    desc: 'Reliable',
+                    url: type === 'movie'
+                        ? `https://vidsrc.me/embed/movie?tmdb=${id}`
+                        : `https://vidsrc.me/embed/tv?tmdb=${id}&season=${season}&episode=${episode}`
+                },
+                {
+                    name: 'Embed.su',
+                    desc: 'Alternative',
+                    url: type === 'movie'
+                        ? `https://embed.su/embed/movie/${id}`
+                        : `https://embed.su/embed/tv/${id}/${season}/${episode}`
+                }
+            ];
+
+            let html = webSources.map(src => `
+        <a href="${src.url}" target="_blank" class="stream-btn">
+          <span class="stream-icon">▶️</span>
+          <div class="stream-info">
+            <div class="stream-name">${src.name}</div>
+            <div class="stream-desc">${src.desc}</div>
+          </div>
+        </a>
+      `).join('');
+
+            // Add placeholder for Direct Stream
+            html += `
+         <a id="directStreamBtn" href="#" onclick="return false;" class="stream-btn" style="opacity: 0.7; cursor: wait;">
+           <span class="stream-icon">⏳</span>
+           <div class="stream-info">
+             <div class="stream-name">Scanning...</div>
+             <div class="stream-desc">Searching WebStreamr...</div>
+           </div>
+         </a>
+      `;
+
+            webContainer.innerHTML = html;
+
+            // Fetch real Direct Stream link asynchronously
+            if (imdbId) {
+                try {
+                    const fetchUrl = type === 'movie'
+                        ? `/api/webstreamr/movie/${imdbId}`
+                        : `/api/webstreamr/tv/${imdbId}/${season}/${episode}`;
+
+                    const res = await fetch(fetchUrl);
+                    const data = await res.json();
+
+                    const btn = document.getElementById('directStreamBtn');
+                    if (data.found && btn) {
+                        btn.href = data.url;
+                        btn.target = '_blank';
+                        btn.onclick = null;
+                        btn.style.opacity = '1';
+                        btn.style.cursor = 'pointer';
+                        btn.style.borderColor = '#46d369'; // Green border for success
+                        btn.innerHTML = `
+                <span class="stream-icon">🚀</span>
+                <div class="stream-info">
+                  <div class="stream-name">Direct Stream</div>
+                  <div class="stream-desc">${data.description || 'Ready to play'}</div>
+                </div>
+            `;
+                    } else if (btn) {
+                        btn.innerHTML = `
+                <span class="stream-icon">❌</span>
+                <div class="stream-info">
+                  <div class="stream-name">Not Found</div>
+                  <div class="stream-desc">Stream unavailable</div>
+                </div>
+            `;
+                    }
+                } catch (e) {
+                    console.error('Stream fetch error', e);
+                }
+            }
+        }
+
+        // Account Modal Logic
+        const accountModal = document.getElementById('accountModal');
+
+        function openAccountModal() {
+            accountModal.classList.add('active');
+            // Check current token status
+            fetch('/api/stremio-token')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.hasToken) {
+                        document.getElementById('stremioEmail').value = data.email || '';
+                        document.getElementById('tokenResult').style.display = 'block';
+                        document.getElementById('tokenDisplay').textContent = data.authKey.substring(0, 20) + '...';
+                        document.getElementById('recoverTokenBtn').textContent = 'Refresh Token';
+                    }
+                });
+        }
+
+        function closeAccountModal() {
+            accountModal.classList.remove('active');
+        }
+
+        async function recoverToken() {
+            const email = document.getElementById('stremioEmail').value;
+            const password = document.getElementById('stremioPassword').value;
+            const btn = document.getElementById('recoverTokenBtn');
+            const resultBox = document.getElementById('tokenResult');
+            const display = document.getElementById('tokenDisplay');
+
+            if (!email || !password) {
+                alert('Please enter both email and password');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Recovering...';
+            display.textContent = '';
+            resultBox.style.display = 'none';
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    resultBox.style.display = 'block';
+                    display.textContent = data.authKey;
+                    btn.textContent = 'Success! Token Saved';
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.textContent = 'Recover Token';
+                    }, 2000);
+                } else {
+                    alert('Login failed: ' + data.error);
+                    btn.disabled = false;
+                    btn.textContent = 'Recover Token';
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Error connecting to server');
+                btn.disabled = false;
+                btn.textContent = 'Recover Token';
+            }
+        }
+
+        // Close account modal on outside click
+        accountModal.addEventListener('click', (e) => {
+            if (e.target === accountModal) closeAccountModal();
+        });
+
+        // Event Listeners
+        searchBtn.addEventListener('click', search);
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') search();
+        });
+
+        document.getElementById('seasonInput').addEventListener('change', updateLinks);
+        document.getElementById('episodeInput').addEventListener('change', updateLinks);
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
+
+</body>
+
+</html>
