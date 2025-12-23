@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>StreamFinder Pro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      --bg-color: #121212;
+      --card-bg: #1e1e1e;
+      --primary: #e50914;
+      /* Netflix Red-ish */
+      --text: #ffffff;
+      --text-muted: #b3b3b3;
+      --input-bg: #333;
+      --radius: 8px;
+      --transition: 0.3s ease;
+    }
+
+    body {
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    header {
+      width: 100%;
+      padding: 40px 20px;
+      text-align: center;
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, rgba(18, 18, 18, 0) 100%);
+    }
+
+    h1 {
+      margin: 0 0 20px;
+      font-weight: 300;
+      letter-spacing: 1px;
+    }
+
+    .search-container {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: var(--radius);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--text-muted);
+      font-size: 0.9em;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 12px;
+      background: var(--input-bg);
+      border: 1px solid transparent;
+      border-radius: 4px;
+      color: white;
+      font-size: 16px;
+      box-sizing: border-box;
+      transition: var(--transition);
+    }
+
+    input:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: #444;
+    }
+
+    button.primary-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: var(--transition);
+      margin-top: 10px;
+    }
+
+    button.primary-btn:hover {
+      background: #ff1f2d;
+      transform: translateY(-1px);
+    }
+
+    button.primary-btn:disabled {
+      background: #555;
+      cursor: not-allowed;
+    }
+
+    /* Results Grid */
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 20px;
+      width: 100%;
+      max-width: 1000px;
+      padding: 40px 20px;
+    }
+
+    .movie-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      overflow: hidden;
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+    }
+
+    .movie-card:hover {
+      transform: scale(1.05);
+      z-index: 10;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+    }
+
+    .poster {
+      width: 100%;
+      /* aspect-ratio: 2/3; */
+      height: 225px;
+      background: #2a2a2a;
+      object-fit: cover;
+    }
+
+    .card-info {
+      padding: 10px;
+    }
+
+    .card-title {
+      font-weight: bold;
+      font-size: 0.95em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-year {
+      font-size: 0.8em;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Season Selector Overlay */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      padding: 20px;
+    }
+
+    .modal {
+      background: var(--card-bg);
+      padding: 30px;
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 500px;
+      position: relative;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .links-container {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      /* gap: 10px; */
+    }
+
+    .links-container>*:not(:last-child) {
+      margin-bottom: 10px;
+    }
+
+    .source-btn {
+      display: block;
+      padding: 12px;
+      background: #333;
+      color: white;
+      text-decoration: none;
+      text-align: center;
+      border-radius: 4px;
+      transition: var(--transition);
+      border-left: 4px solid var(--primary);
+    }
+
+    .source-btn:hover {
+      background: #444;
+      padding-left: 20px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .error {
+      color: #ff6b6b;
+      margin-top: 10px;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>StreamFinder Pro</h1>
+    <div class="search-container">
+      <div class="form-group">
+        <label>Type</label>
+        <select id="typeSelect">
+          <option value="movie">Movie</option>
+          <option value="tv">TV Show</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Search Title</label>
+        <input type="text" id="searchInput" placeholder="Enter movie or show name..."
+          onkeydown="if(event.key==='Enter') searchTMDB()">
+      </div>
+
+      <button class="primary-btn" onclick="searchTMDB()" id="searchBtn">Search</button>
+      <div id="errorMsg" class="error"></div>
+    </div>
+  </header>
+
+  <div id="resultsGrid" class="results-grid"></div>
+
+  <!-- Modal for TV Details / Links -->
+  <div id="detailsModal" class="overlay">
+    <div class="modal">
+      <button class="close-btn" onclick="closeModal()">&times;</button>
+      <h2 id="modalTitle">Select Episode</h2>
+
+      <div id="tvInputs" class="hidden">
+        <div class="form-group">
+          <label>Season</label>
+          <input type="number" id="seasonInput" min="1" value="1" onchange="updateLinks()">
+        </div>
+        <div class="form-group">
+          <label>Episode</label>
+          <input type="number" id="episodeInput" min="1" value="1" onchange="updateLinks()">
+        </div>
+      </div>
+
+      <div id="linkList" class="links-container"></div>
+    </div>
+  </div>
+
+  <script>
+    const API_KEY = 'e0f8c3121386db3c0c8a93f2da63804f'; // Public V3 Key
+    const IMG_BASE = 'https://image.tmdb.org/t/p/w342';
+
+    let currentSelection = null; // Stores currently selected show data
+
+    async function searchTMDB() {
+      const query = document.getElementById('searchInput').value;
+      const type = document.getElementById('typeSelect').value;
+      const grid = document.getElementById('resultsGrid');
+      const errorMsg = document.getElementById('errorMsg');
+      const btn = document.getElementById('searchBtn');
+
+      if (!query) return;
+
+      // Reset UI
+      grid.innerHTML = '';
+      errorMsg.textContent = '';
+      btn.disabled = true;
+      btn.textContent = 'Searching...';
+
+      try {
+        const res = await fetch(`https://api.themoviedb.org/3/search/${type}?api_key=${API_KEY}&query=${encodeURIComponent(query)}`);
+        const data = await res.json();
+
+        if (!data.results || data.results.length === 0) {
+          errorMsg.textContent = 'No results found.';
+          btn.disabled = false;
+          btn.textContent = 'Search';
+          return;
+        }
+
+        // Sort by popularity to show most likely results first
+        const results = data.results.sort((a, b) => b.popularity - a.popularity);
+
+        results.forEach(item => {
+          // Filter out items without posters or titles if desired (optional)
+          if (!item.poster_path) return;
+
+          const card = document.createElement('div');
+          card.className = 'movie-card';
+          const title = item.title || item.name;
+          const releaseDate = item.release_date || item.first_air_date || '';
+          const year = releaseDate.split('-')[0];
+
+          card.innerHTML = `
+        <img class="poster" src="${IMG_BASE}${item.poster_path}" alt="${title}">
+        <div class="card-info">
+          <div class="card-title" title="${title}">${title}</div>
+          <div class="card-year">${year || 'Unknown'}</div>
+        </div>
+      `;
+
+          card.onclick = () => openDetails(item, type);
+          grid.appendChild(card);
+        });
+
+      } catch (e) {
+        errorMsg.textContent = 'Error fetching data. Check your internet connection.';
+        console.error(e);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Search';
+      }
+    }
+
+    function openDetails(item, type) {
+      currentSelection = { ...item, type };
+      const modal = document.getElementById('detailsModal');
+      const modalTitle = document.getElementById('modalTitle');
+      const tvInputs = document.getElementById('tvInputs');
+
+      modal.style.display = 'flex';
+      modalTitle.textContent = item.title || item.name;
+
+      if (type === 'tv') {
+        tvInputs.classList.remove('hidden');
+        // Default to S1 E1
+        document.getElementById('seasonInput').value = 1;
+        document.getElementById('episodeInput').value = 1;
+      } else {
+        tvInputs.classList.add('hidden');
+      }
+
+      updateLinks();
+    }
+
+    function updateLinks() {
+      if (!currentSelection) return;
+
+      const id = currentSelection.id;
+      const type = currentSelection.type;
+      const list = document.getElementById('linkList');
+      list.innerHTML = '';
+
+      let season = '';
+      let episode = '';
+
+      if (type === 'tv') {
+        season = document.getElementById('seasonInput').value || 1;
+        episode = document.getElementById('episodeInput').value || 1;
+      }
+
+      // Define Sources
+      const sources = [
+        { name: 'VixSrc (Best Quality)', url: generateUrl('vixsrc', id, type, season, episode) },
+        { name: 'VidSrc.to', url: generateUrl('vidsrc-to', id, type, season, episode) },
+        { name: 'VidSrc.me', url: generateUrl('vidsrc-me', id, type, season, episode) },
+        { name: 'Embed.su', url: generateUrl('embedsu', id, type, season, episode) },
+        { name: '2Embed', url: generateUrl('2embed', id, type, season, episode) }
+      ];
+
+      sources.forEach(src => {
+        const a = document.createElement('a');
+        a.className = 'source-btn';
+        a.href = src.url;
+        a.target = '_blank';
+        a.textContent = `Play on ${src.name}`;
+        list.appendChild(a);
+      });
+    }
+
+    function generateUrl(provider, id, type, season, episode) {
+      // Logic for different providers
+      if (provider === 'vixsrc') {
+        return type === 'movie'
+          ? `https://vixsrc.to/movie/${id}`
+          : `https://vixsrc.to/tv/${id}/${season}/${episode}`;
+      }
+
+      if (provider === 'vidsrc-to') {
+        return type === 'movie'
+          ? `https://vidsrc.to/embed/movie/${id}`
+          : `https://vidsrc.to/embed/tv/${id}/${season}/${episode}`;
+      }
+
+      if (provider === 'vidsrc-me') {
+        return type === 'movie'
+          ? `https://vidsrc.me/embed/movie?tmdb=${id}`
+          : `https://vidsrc.me/embed/tv?tmdb=${id}&season=${season}&episode=${episode}`;
+      }
+
+      if (provider === 'embedsu') {
+        return type === 'movie'
+          ? `https://embed.su/embed/movie/${id}`
+          : `https://embed.su/embed/tv/${id}/${season}/${episode}`;
+      }
+
+      if (provider === '2embed') {
+        return type === 'movie'
+          ? `https://www.2embed.cc/embed/${id}`
+          : `https://www.2embed.cc/embedtv/${id}&s=${season}&e=${episode}`;
+      }
+
+      return '#';
+    }
+
+    function closeModal() {
+      document.getElementById('detailsModal').style.display = 'none';
+    }
+
+    // Close modal on outside click
+    window.onclick = function (event) {
+      const modal = document.getElementById('detailsModal');
+      if (event.target === modal) {
+        closeModal();
+      }
+    }
+  </script>
+
+</body>
+
+</html>
