@@ -1,0 +1,18 @@
+{
+  "name": "stremio-token-manager",
+  "version": "1.0.0",
+  "description": "Node.js tool to manage and reuse Stremio account tokens",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "login": "node login.js"
+  },
+  "keywords": ["stremio", "token", "api"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "node-fetch": "^3.3.2",
+    "readline-sync": "^1.4.10"
+  }
+}
