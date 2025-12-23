@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Secrets and Tokens
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+token.json
+*.token
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Build/Misc
+dist/
+build/
+*.zip
+.vscode/
+.idea/
